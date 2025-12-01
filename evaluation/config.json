@@ -1,0 +1,18 @@
+{
+    "state": "train",
+    "epoch": 20000,
+    "batch_size": 64,
+    "lr": 1e-2,
+    "img_size": 64,
+    "grad_clip": 1.0,
+    "device": "cuda:6",
+    "w": 1.8,
+    "save_dir": "./PATH_TO_SAVE/",
+    "training_load_weight": "None",
+    "test_load_weight": "ckpt_xxx_",
+    "nrow": 8,
+    "meta_path": "PATH_TO_METADATA",
+    "base_path": "PATH_TO_LOAD_IMG",
+    "condition_dim": 204,
+    "num_models": 5
+}
