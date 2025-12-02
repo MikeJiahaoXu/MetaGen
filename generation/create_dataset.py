@@ -209,10 +209,11 @@ def build_dataset(args: argparse.Namespace) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Convert data.txt into images + JSONL metadata.")
-    parser.add_argument("--data-file", required=True, help="Path to data.txt source file.")
+    parser.add_argument("--data-file",
+        default="data.txt", help="Path to data.txt source file.")
     parser.add_argument(
         "--output-dir",
-        default="./dataset_output",
+        default="test_dataset",
         help="Root directory for generated artifacts (images + metadata).",
     )
     parser.add_argument(
