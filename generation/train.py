@@ -141,7 +141,7 @@ def eval(modelConfig: Dict):
         else:
             sampler = DDIMSampler(model, modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device)
         for i, (images, labels, file_names) in enumerate(test_dataloader):
-            if i == 20:
+            if i == 3:
                 break
             images = images.to(device)
             labels = labels.to(device)
