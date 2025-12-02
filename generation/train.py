@@ -136,7 +136,7 @@ def eval(modelConfig: Dict):
         model.load_state_dict(ckpt)
         print("model load weight done.")
         model.eval()
-        if modelConfig["sample"] == "basic":
+        if modelConfig["sample_method"] == "basic":
             sampler = GaussianDiffusionSampler(model, modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"], w=modelConfig["w"]).to(device)
         else:
             sampler = DDIMSampler(model, modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device)
