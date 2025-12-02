@@ -1,6 +1,6 @@
 {
-    "state": "-train",
-    "epoch": 10,
+    "state": "train",
+    "epoch": 100,
     "batch_size": 4,
     "T": 1000,
     "channel": 256,
@@ -24,7 +24,7 @@
     "sampledImgName": "sample.png",
     "nrow": 4,
     "sample_grid_padding": 2,
-    "sample_method": "basic",
+    "sample_method": "-basic",
     "params_dim": 61,
     "meta_path": "test_dataset/metadata.jsonl",
     "base_path": "test_dataset/images/"
