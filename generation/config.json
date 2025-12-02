@@ -18,7 +18,7 @@
     "w": 1.8,
     "save_dir": "outputs/generation",
     "training_load_weight": null,
-    "training_load_weight_path": "ckpt_xxx_.pt",
+    "training_load_weight_path": "ckpt_5_.pt",
     "test_load_weight": "ckpt_xxx_.pt",
     "sampled_dir": "outputs/generation/samples",
     "sampledImgName": "sample.png",
