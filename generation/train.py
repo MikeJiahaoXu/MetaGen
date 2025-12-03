@@ -38,6 +38,23 @@ def log(loss_list):
         file.write(f"Epoch {len(loss_list)}: Loss {sum(loss_list) / len(loss_list)}\n")
 
 
+def _load_weights(model: torch.nn.Module, weight_path: str, device: torch.device, strict: bool = False):
+    """
+    Load a checkpoint and strip a possible DataParallel prefix.
+    """
+    state_dict = torch.load(weight_path, map_location=device)
+    if any(k.startswith("module.") for k in state_dict.keys()):
+        state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+    model.load_state_dict(state_dict, strict=strict)
+
+
+def _get_state_dict(model: torch.nn.Module):
+    """
+    Handle state dict retrieval for both single and DataParallel models.
+    """
+    return model.module.state_dict() if isinstance(model, torch.nn.DataParallel) else model.state_dict()
+
+
 def train(modelConfig: Dict):
     """
     Train the diffusion model
@@ -48,7 +65,7 @@ def train(modelConfig: Dict):
     # Ensure reproducible results
     torch.manual_seed(42)
     np.random.seed(42)
-    device = torch.device(modelConfig["device"])
+    device = torch.device(modelConfig["device"] if torch.cuda.is_available() else "cpu")
 
     os.makedirs(modelConfig["save_dir"], exist_ok=True)
     os.makedirs(modelConfig["sampled_dir"], exist_ok=True)
@@ -59,16 +76,31 @@ def train(modelConfig: Dict):
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
     train_dataloader = DataLoader(
-        train_dataset, batch_size=modelConfig["batch_size"], shuffle=True, num_workers=4, drop_last=True, pin_memory=True
+        train_dataset,
+        batch_size=modelConfig["batch_size"],
+        shuffle=True,
+        num_workers=4,
+        drop_last=True,
+        pin_memory=device.type == "cuda",
     )
 
     # model setup=======================
     net_model = UNet(T=modelConfig["T"], params_dim=modelConfig["params_dim"], ch=modelConfig["channel"], ch_mult=modelConfig["channel_mult"],
                      num_res_blocks=modelConfig["num_res_blocks"], dropout=modelConfig["dropout"]).to(device)
     if modelConfig["training_load_weight"] is not None:
-        net_model.load_state_dict(torch.load(os.path.join(
-            modelConfig["save_dir"], modelConfig["training_load_weight"]), map_location=device), strict=False)
+        _load_weights(
+            net_model,
+            os.path.join(modelConfig["save_dir"], modelConfig["training_load_weight"]),
+            device,
+            strict=False,
+        )
         print("Model weight load down.")
+
+    use_data_parallel = torch.cuda.is_available() and torch.cuda.device_count() > 1
+    if use_data_parallel:
+        print(f"Using DataParallel on {torch.cuda.device_count()} GPUs.")
+        net_model = torch.nn.DataParallel(net_model)
+
     optimizer = torch.optim.AdamW(
         net_model.parameters(), lr=modelConfig["lr"], weight_decay=1e-4)
     # cosineScheduler = optim.lr_scheduler.CosineAnnealingLR(
@@ -108,8 +140,10 @@ def train(modelConfig: Dict):
         # warmUpScheduler.step()
         # save model weight
         if e % 5 == 0:
-            torch.save(net_model.state_dict(), os.path.join(
-                modelConfig["save_dir"], 'ckpt_' + str(e) + "_.pt"))
+            torch.save(
+                _get_state_dict(net_model),
+                os.path.join(modelConfig["save_dir"], 'ckpt_' + str(e) + "_.pt"),
+            )
         if e < 6:
             scheduler.step()
         
@@ -118,7 +152,7 @@ def eval(modelConfig: Dict):
     # Ensure reproducible results
     torch.manual_seed(42)
     np.random.seed(42)
-    device = torch.device(modelConfig["device"])
+    device = torch.device(modelConfig["device"] if torch.cuda.is_available() else "cpu")
 
     # dataset setup=======================
     dataset = MetaDataset(modelConfig["meta_path"], modelConfig["base_path"])
@@ -126,14 +160,27 @@ def eval(modelConfig: Dict):
     test_size = len(dataset) - train_size
     train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
     test_dataloader = DataLoader(
-        test_dataset, batch_size=modelConfig["batch_size"], shuffle=True, num_workers=4, drop_last=False, pin_memory=True
+        test_dataset,
+        batch_size=modelConfig["batch_size"],
+        shuffle=True,
+        num_workers=4,
+        drop_last=False,
+        pin_memory=device.type == "cuda",
     )
     # load model and evaluate
     with torch.no_grad():
         model = UNet(T=modelConfig["T"], params_dim=modelConfig["params_dim"], ch=modelConfig["channel"], ch_mult=modelConfig["channel_mult"], num_res_blocks=modelConfig["num_res_blocks"], dropout=modelConfig["dropout"])
-        ckpt = torch.load(os.path.join(
-            modelConfig["save_dir"], modelConfig["test_load_weight"]), map_location=device)
-        model.load_state_dict(ckpt)
+        _load_weights(
+            model,
+            os.path.join(modelConfig["save_dir"], modelConfig["test_load_weight"]),
+            device,
+            strict=True,
+        )
+        use_data_parallel = torch.cuda.is_available() and torch.cuda.device_count() > 1
+        if use_data_parallel:
+            print(f"Using DataParallel on {torch.cuda.device_count()} GPUs for evaluation.")
+            model = torch.nn.DataParallel(model)
+
         print("model load weight done.")
         model.eval()
         if modelConfig["sample_method"] == "basic":
