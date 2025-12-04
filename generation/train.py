@@ -154,6 +154,10 @@ def eval(modelConfig: Dict):
     np.random.seed(42)
     device = torch.device(modelConfig["device"] if torch.cuda.is_available() else "cpu")
 
+    # Make sure output directories exist when running evaluation only
+    os.makedirs(modelConfig["save_dir"], exist_ok=True)
+    os.makedirs(modelConfig["sampled_dir"], exist_ok=True)
+
     # dataset setup=======================
     dataset = MetaDataset(modelConfig["meta_path"], modelConfig["base_path"])
     train_size = int(0.9 * len(dataset))
