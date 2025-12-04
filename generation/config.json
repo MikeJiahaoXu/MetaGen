@@ -24,7 +24,7 @@
     "sampledImgName": "sample.png",
     "nrow": 4,
     "sample_grid_padding": 2,
-    "sample_method": "basic",
+    "sample_method": "-basic",
     "params_dim": 61,
     "meta_path": "test_dataset/metadata.jsonl",
     "base_path": "test_dataset/images/"
