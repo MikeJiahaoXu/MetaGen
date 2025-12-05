@@ -14,12 +14,8 @@ for fn in os.listdir(folder):
 
     h, w = arr.shape  # should be 240 x 98
 
-    # 左右各一列白色（255）
-    left_col  = np.full((h, 3), 255, dtype=np.uint8)
-    right_col = np.full((h, 3), 255, dtype=np.uint8)
-
-    # 拼接：左白 + 原图 + 右白
-    new_arr = np.concatenate([left_col, arr, right_col], axis=1)
+    # 左右各裁掉 4 列，宽度减少 8 像素
+    new_arr = arr[:, 4:-4]
 
     new_img = Image.fromarray(new_arr)
     new_img.save(path)   # 覆盖保存
