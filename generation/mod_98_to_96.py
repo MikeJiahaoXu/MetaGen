@@ -15,7 +15,7 @@ for fn in os.listdir(folder):
     h, w = arr.shape  # should be 240 x 98
 
     # 左右各裁掉 4 列，宽度减少 8 像素
-    new_arr = arr[:, 4:-4]
+    new_arr = arr[:, 1:-1]
 
     new_img = Image.fromarray(new_arr)
     new_img.save(path)   # 覆盖保存
