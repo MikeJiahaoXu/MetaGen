@@ -32,9 +32,6 @@ def main() -> None:
         if not fn.lower().endswith((".png", ".jpg", ".jpeg")):
             continue
 
-        if fn.lower().endswith("sample_009912.png"):
-            continue
-
         path = os.path.join(folder, fn)
         with Image.open(path) as img:
             arr = np.array(img)

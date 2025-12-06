@@ -95,7 +95,7 @@ def generate_structure_image(
     img = np.zeros((length, width), dtype=np.uint8)
 
     # fixed side bars
-    border_w = 5
+    border_w = 4
     img[:, :border_w] = 255
     img[:, width - border_w :] = 255
 
@@ -235,7 +235,7 @@ def parse_args() -> argparse.Namespace:
         help="Output metadata file. Relative paths are resolved inside --output-dir.",
     )
     parser.add_argument("--block-size", type=int, default=61, help="Rows per sample.")
-    parser.add_argument("--width", type=int, default=98, help="Image width in pixels.")
+    parser.add_argument("--width", type=int, default=96, help="Image width in pixels.")
     parser.add_argument("--length", type=int, default=240, help="Image height in pixels.")
     parser.add_argument("--d2", type=float, default=0.05, help="Gap parameter used in the template.")
     parser.add_argument(
