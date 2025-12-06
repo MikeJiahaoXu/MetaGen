@@ -20,7 +20,11 @@ for fn in os.listdir(folder):
 
     elif (h, w) == (240, 98):
         new_arr = arr[:, 1:-1]
-        Image.fromarray(new_arr).save(path)
+        try:
+            Image.fromarray(new_arr).save(path)
+        except Exception as e:
+            print(f"Failed to save {path}: {e}")
+
 
     else:
         print(f"Warning: {fn} has unexpected size {h}x{w}")
