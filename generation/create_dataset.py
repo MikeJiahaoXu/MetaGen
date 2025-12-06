@@ -81,8 +81,6 @@ def clip_range(start: int, end: int, limit: int) -> tuple[int, int]:
     end = max(0, min(limit, end))
     return start, end
 
-def reduce_by_half(arr: np.ndarray) -> np.ndarray:
-    return arr[::2, ::2]
 
 def generate_structure_image(
     h1: float,
@@ -153,7 +151,7 @@ def generate_structure_image(
     if right_mid2_x1 > right_mid2_x0 and bot_mid2_y1 > bot_mid2_y0:
         img[bot_mid2_y0:bot_mid2_y1, right_mid2_x0:right_mid2_x1] = 255
 
-    return reduce_by_half(img)
+    return img
 
 
 def save_image(img: np.ndarray, path: Path) -> None:
@@ -237,7 +235,7 @@ def parse_args() -> argparse.Namespace:
         help="Output metadata file. Relative paths are resolved inside --output-dir.",
     )
     parser.add_argument("--block-size", type=int, default=61, help="Rows per sample.")
-    parser.add_argument("--width", type=int, default=96, help="Image width in pixels.")
+    parser.add_argument("--width", type=int, default=98, help="Image width in pixels.")
     parser.add_argument("--length", type=int, default=240, help="Image height in pixels.")
     parser.add_argument("--d2", type=float, default=0.05, help="Gap parameter used in the template.")
     parser.add_argument(

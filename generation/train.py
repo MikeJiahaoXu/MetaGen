@@ -20,22 +20,28 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
-def log(loss_list):
+def log_epoch_losses(epoch_losses, log_path="Log.txt", fig_path="loss.png"):
     """
-    Log the loss and save the loss plot
+    Log and plot average training loss per epoch.
+
+    epoch_losses: list of floats, each the avg loss of one epoch
     """
-    plt_train = []
-    plt_train.append(sum(loss_list) / len(loss_list))
-    x = range(len(plt_train))
-    plt.plot(x, plt_train, label='train')
-    plt.legend()
-    plt.title('Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.savefig('loss.png')
+    avg_loss = epoch_losses[-1]
+    epoch_idx = len(epoch_losses)
+
+    # 1) Append to text log
+    with open(log_path, "a") as f:
+        f.write(f"Epoch {epoch_idx}: Loss {avg_loss:.6f}\n")
+
+    # 2) Update loss curve figure
     plt.clf()
-    with open('Log.txt', 'a') as file:
-        file.write(f"Epoch {len(loss_list)}: Loss {sum(loss_list) / len(loss_list)}\n")
+    x = range(1, epoch_idx + 1)
+    plt.plot(x, epoch_losses, label="train")
+    plt.legend()
+    plt.title("Training Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.savefig(fig_path)
 
 
 def _load_weights(model: torch.nn.Module, weight_path: str, device: torch.device, strict: bool = False):
@@ -111,7 +117,7 @@ def train(modelConfig: Dict):
         net_model, modelConfig["beta_1"], modelConfig["beta_T"], modelConfig["T"]).to(device)
 
     # start training=======================
-    plt_train = []
+    epoch_losses = []
     for e in range(modelConfig["epoch"]):
         loss_list = []
         net_model.train()
@@ -136,7 +142,10 @@ def train(modelConfig: Dict):
                     "img shape: ": x_0.shape,
                     "LR": optimizer.state_dict()['param_groups'][0]["lr"]
                 })
-        log(loss_list)
+        epoch_loss = sum(loss_list) / len(loss_list)
+        epoch_losses.append(epoch_loss)
+        print(f"Epoch {e}: loss {epoch_loss:.6f}")
+        log_epoch_losses(epoch_losses)
         # warmUpScheduler.step()
         # save model weight
         if e % 20 == 0:
