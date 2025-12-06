@@ -1,6 +1,6 @@
 {
     "state": "-train",
-    "epoch": 100,
+    "epoch": 1000,
     "batch_size": 8,
     "T": 1000,
     "channel": 256,

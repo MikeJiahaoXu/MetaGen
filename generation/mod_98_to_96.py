@@ -2,9 +2,19 @@ import os
 from PIL import Image
 import numpy as np
 
+import sys
+
+part = int(sys.argv[1])   # 0 or 1
+
 folder = "test_dataset/images"
 
-for fn in os.listdir(folder):
+files = sorted(os.listdir(folder))
+start = part * 5000
+end = start + 5000
+files = files[start:end]
+
+for fn in files:
+
     if not fn.lower().endswith((".png", ".jpg", ".jpeg")):
         continue
 
