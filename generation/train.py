@@ -139,7 +139,7 @@ def train(modelConfig: Dict):
         log(loss_list)
         # warmUpScheduler.step()
         # save model weight
-        if e % 5 == 0:
+        if e % 20 == 0:
             torch.save(
                 _get_state_dict(net_model),
                 os.path.join(modelConfig["save_dir"], 'ckpt_' + str(e) + "_.pt"),
