@@ -105,7 +105,7 @@ def generate_structure_image(
     img = np.zeros((length, width), dtype=np.uint8)
 
     # fixed side bars
-    border_w = 5
+    border_w = 6
     img[:, :border_w] = 255
     img[:, width - border_w :] = 255
 
