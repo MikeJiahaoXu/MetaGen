@@ -2,32 +2,27 @@ import os
 from PIL import Image
 import numpy as np
 
-import sys
-
-part = int(sys.argv[1])   # 0 or 1
-
 folder = "test_dataset/images"
 
-files = sorted(os.listdir(folder))
-start = part * 5000
-end = start + 5000
-files = files[start:end]
-
-for fn in files:
-
+for fn in os.listdir(folder):
     if not fn.lower().endswith((".png", ".jpg", ".jpeg")):
         continue
 
     path = os.path.join(folder, fn)
-    img = Image.open(path).convert("L")   # 保持单通道/灰度（如果是RGB改成 "RGB"）
+    img = Image.open(path).convert("L")
     arr = np.array(img)
 
-    h, w = arr.shape  # should be 240 x 98
+    h, w = arr.shape  # should be 240×98 or 240×96
 
-    # 左右各裁掉 4 列，宽度减少 8 像素
-    new_arr = arr[:, 1:-1]
+    if (h, w) == (240, 96):
+        # already correct
+        continue
 
-    new_img = Image.fromarray(new_arr)
-    new_img.save(path)   # 覆盖保存
+    elif (h, w) == (240, 98):
+        new_arr = arr[:, 1:-1]
+        Image.fromarray(new_arr).save(path)
+
+    else:
+        print(f"Warning: {fn} has unexpected size {h}x{w}")
 
 print("Done.")
