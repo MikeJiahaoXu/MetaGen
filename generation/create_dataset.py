@@ -2,14 +2,15 @@
 """
 create_dataset.py
 
-Builds a metasurface dataset (images + metadata) from a tab-separated data.txt file.
-Each 61-line block is treated as one sample:
+Builds a metasurface dataset (images + metadata) from one or more tab-separated
+input files (defaults: gen_data0.txt and gen_data1.txt). Each 61-line block is
+treated as one sample:
   * the shared h1_o/l1_o/l2_o/d1_o parameters drive a 98x240 binary mask
   * the 61 phase-shift (rad) entries become the label vector stored in "param"
 
 Example:
     python create_dataset.py \
-        --data-file ./data.txt \
+        --data-files ./gen_data0.txt ./gen_data1.txt \
         --output-dir ./processed_dataset \
         --image-dir images \
         --meta-path metadata.jsonl
@@ -160,8 +161,8 @@ def save_image(img: np.ndarray, path: Path) -> None:
 
 
 def build_dataset(args: argparse.Namespace) -> None:
-    """Main orchestration: parse file, create images, and write metadata."""
-    data_file = Path(args.data_file).resolve()
+    """Main orchestration: parse file(s), create images, and write metadata."""
+    data_files = [Path(p).resolve() for p in args.data_files]
     output_dir = Path(args.output_dir).resolve()
     image_dir = (output_dir / args.image_dir).resolve()
     meta_path = Path(args.meta_path)
@@ -171,36 +172,37 @@ def build_dataset(args: argparse.Namespace) -> None:
 
     total_samples = 0
     with meta_path.open("w", encoding="utf-8") as meta_fp:
-        for block in iter_blocks(data_file, args.block_size):
-            base = ensure_constant_params(block)
-            img = generate_structure_image(
-                h1=base["h1_o"],
-                l1=base["l1_o"],
-                l2=base["l2_o"],
-                d1=base["d1_o"],
-                width=args.width,
-                length=args.length,
-                d2=args.d2,
-            )
-            file_name = f"{args.prefix}_{total_samples:06d}.png"
-            save_image(img, image_dir / file_name)
+        for data_file in data_files:
+            for block in iter_blocks(data_file, args.block_size):
+                base = ensure_constant_params(block)
+                img = generate_structure_image(
+                    h1=base["h1_o"],
+                    l1=base["l1_o"],
+                    l2=base["l2_o"],
+                    d1=base["d1_o"],
+                    width=args.width,
+                    length=args.length,
+                    d2=args.d2,
+                )
+                file_name = f"{args.prefix}_{total_samples:06d}.png"
+                save_image(img, image_dir / file_name)
 
-            phases = [row["phase"] for row in block]
-            freqs = [row["freq"] for row in block]
+                phases = [row["phase"] for row in block]
+                freqs = [row["freq"] for row in block]
 
-            meta_record = {
-                "file_name": file_name,
-                "param": phases,
-                "condition": {
-                    "h1_o": base["h1_o"],
-                    "l1_o": base["l1_o"],
-                    "l2_o": base["l2_o"],
-                    "d1_o": base["d1_o"],
-                    "frequencies_hz": freqs,
-                },
-            }
-            meta_fp.write(json.dumps(meta_record) + "\n")
-            total_samples += 1
+                meta_record = {
+                    "file_name": file_name,
+                    "param": phases,
+                    "condition": {
+                        "h1_o": base["h1_o"],
+                        "l1_o": base["l1_o"],
+                        "l2_o": base["l2_o"],
+                        "d1_o": base["d1_o"],
+                        "frequencies_hz": freqs,
+                    },
+                }
+                meta_fp.write(json.dumps(meta_record) + "\n")
+                total_samples += 1
 
     print(f"Wrote {total_samples} samples.")
     print(f"Images: {image_dir}")
@@ -208,9 +210,15 @@ def build_dataset(args: argparse.Namespace) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Convert data.txt into images + JSONL metadata.")
-    parser.add_argument("--data-file",
-        default="data.txt", help="Path to data.txt source file.")
+    parser = argparse.ArgumentParser(
+        description="Convert tab-separated data files into images + JSONL metadata."
+    )
+    parser.add_argument(
+        "--data-files",
+        nargs="+",
+        default=["gen_data0.txt", "gen_data1.txt"],
+        help="Path(s) to tab-separated data source files; all will be combined.",
+    )
     parser.add_argument(
         "--output-dir",
         default="test_dataset",
