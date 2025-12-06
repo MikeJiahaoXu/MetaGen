@@ -81,6 +81,16 @@ def clip_range(start: int, end: int, limit: int) -> tuple[int, int]:
     end = max(0, min(limit, end))
     return start, end
 
+def is_reducible(arr: np.ndarray) -> bool:
+    """Return True if every 2×2 block has identical values."""
+    tl = arr[::2, ::2]
+    tr = arr[::2, 1::2]
+    bl = arr[1::2, ::2]
+    br = arr[1::2, 1::2]
+    return np.array_equal(tl, tr) and np.array_equal(tl, bl) and np.array_equal(tl, br)
+
+def reduce_by_half(arr: np.ndarray) -> np.ndarray:
+    return arr[::2, ::2]
 
 def generate_structure_image(
     h1: float,
@@ -151,7 +161,11 @@ def generate_structure_image(
     if right_mid2_x1 > right_mid2_x0 and bot_mid2_y1 > bot_mid2_y0:
         img[bot_mid2_y0:bot_mid2_y1, right_mid2_x0:right_mid2_x1] = 255
 
-    return img
+    if is_reducible(img):
+        return reduce_by_half(img)
+    else:
+        print("Warning: image is not reducible; returning original.")
+        return img
 
 
 def save_image(img: np.ndarray, path: Path) -> None:
